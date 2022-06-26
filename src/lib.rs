@@ -117,7 +117,7 @@ where
             .map(|serialized| bincode::deserialize(&serialized).unwrap())
     }
 
-    /// TODO: refactor keys into a unique trait and have these 2 functions be generic over the trait.
+    /// Gets an item from the table if it exists.
     pub fn get<'t, K>(&'t self, key: &K) -> Option<T>
     where
         K: TableKey<'t, T>,
@@ -139,9 +139,38 @@ where
     }
 
     /// Sets an entry of the table to a certain value.
-    pub fn set<'t>(&'t self, key: &KeyRef<'t, 'b, T>, value: T) {
-        let key = key.value;
+    pub fn set<'t, K>(&'t self, key: &K, value: T)
+    where
+        K: TableKey<'t, T>,
+    {
+        let key = key.value(self);
         self.insert(key, value);
+    }
+
+    pub fn delete<'t, K>(&'t self, key: &K)
+    where
+        K: TableKey<'t, T>,
+    {
+        let path = self.table_item_path() + &key.value(self).to_string();
+        self.base.0.remove(path).unwrap();
+    }
+
+    /// updates an entry.
+    /// If it did not existed but Some(_) is set by the closure, then it is stored.
+    /// If it existed but None is set by the closure, then it is deleted.
+    pub fn update<'t, K, F>(&'t self, key: &K, op: F)
+    where
+        K: TableKey<'t, T>,
+        F: FnOnce(&mut Option<T>),
+    {
+        let mut value = self.get(key);
+        op(&mut value);
+        // update only if there is something to store
+        if let Some(value) = value {
+            self.set(key, value);
+        } else {
+            self.delete(key);
+        }
     }
 
     pub fn keys<'t>(&'t self) -> impl Iterator<Item = KeyRef<'t, 'b, T>> {
@@ -208,27 +237,27 @@ fn example() {
         }
     }
 
-    let base = open("./db").unwrap();
-    let student_table = base.table::<Student>();
+    let db = open("./db").unwrap();
+    let table = db.table::<Student>();
 
-    let bobux_key = student_table.push(Student {
-        name: "bobux".into(),
+    let bob_key = table.push(Student {
+        name: "bob".into(),
         value: 0,
     });
 
-    let bobux = student_table.get(&bobux_key);
-    dbg!(bobux);
+    let bob = table.get(&bob_key);
+    dbg!(bob);
 
-    for key in student_table.keys() {
-        let mut student = student_table.get(&key).unwrap();
-        student.value += 1;
-        student_table.set(&key, student);
+    for key in table.keys() {
+        table.update(&key, |student| {
+            if let Some(student) = student {
+                student.value += 1;
+            }
+        })
     }
 
-    let students_keys = student_table.keys();
-    for key in students_keys {
-        let student = student_table.get(&key);
-        let key = key.value;
-        println!("key: {key}, student: {student:?}");
+    for (key, value) in table.iter() {
+        let key = key.value(&table);
+        println!("key: {key}, student: {value:?}");
     }
 }
