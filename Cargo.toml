@@ -1,10 +1,11 @@
 [package]
 name = "sleded"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["JOLIMAITRE Matthieu <matthieu@imagevo.fr>"]
 description = "Minimalist API for storing data effortlessly persistently to a file."
 license = "MIT"
+repository = "https://github.com/MajorBarnulf/sleded"
 
 [dependencies]
 serde = { version = "1.0.137", features = [ "derive" ] }
