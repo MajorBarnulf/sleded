@@ -41,7 +41,7 @@ where
 {
     value: u64,
     /// TODO: compare tables before indexing as precondition
-    table: &'t Table<'b, T>,
+    _table: &'t Table<'b, T>,
 }
 
 impl<'t, 'b, T> KeyRef<'t, 'b, T>
@@ -51,7 +51,7 @@ where
     pub fn owned(self) -> KeyOwned<T> {
         let Self {
             value: index,
-            table: _,
+            _table: _,
         } = self;
         KeyOwned {
             value: index,
@@ -65,7 +65,7 @@ where
     T: TableLayout,
 {
     /// TODO: compare tables and catch mismatch
-    fn value(&self, table: &Table<T>) -> u64 {
+    fn value(&self, _table: &Table<T>) -> u64 {
         self.value
     }
 }
@@ -81,7 +81,7 @@ impl<'t, 'b, T> TableKey<'t, T> for KeyOwned<T>
 where
     T: TableLayout,
 {
-    fn value(&self, table: &Table<T>) -> u64 {
+    fn value(&self, _table: &Table<T>) -> u64 {
         self.value
     }
 }
@@ -136,7 +136,7 @@ where
         self.insert(key, element);
         KeyRef {
             value: key,
-            table: self,
+            _table: self,
         }
     }
 
@@ -183,7 +183,10 @@ where
             let str = String::from_utf8_lossy(&key);
             let str = &str[prefix.len()..];
             let value = str.parse().unwrap();
-            KeyRef { value, table: self }
+            KeyRef {
+                value,
+                _table: self,
+            }
         })
     }
 
