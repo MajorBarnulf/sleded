@@ -3,6 +3,8 @@ use std::marker::PhantomData;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use sled::Db;
 
+pub mod example;
+
 #[derive(Debug)]
 pub enum Error {
     SledErr(sled::Error),
@@ -220,44 +222,4 @@ where
 {
     let db = sled::open(path).map_err(|e| Error::SledErr(e))?;
     Ok(Base(db))
-}
-
-#[test]
-fn example() {
-    use serde::Deserialize;
-    #[derive(Debug, Serialize, Deserialize)]
-    pub struct Student {
-        name: String,
-        value: usize,
-    }
-
-    impl TableLayout for Student {
-        fn table_name() -> String {
-            "student".into()
-        }
-    }
-
-    let db = open("./db").unwrap();
-    let table = db.table::<Student>();
-
-    let bob_key = table.push(Student {
-        name: "bob".into(),
-        value: 0,
-    });
-
-    let bob = table.get(&bob_key);
-    dbg!(bob);
-
-    for key in table.keys() {
-        table.update(&key, |student| {
-            if let Some(student) = student {
-                student.value += 1;
-            }
-        })
-    }
-
-    for (key, value) in table.iter() {
-        let key = key.value(&table);
-        println!("key: {key}, student: {value:?}");
-    }
 }

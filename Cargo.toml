@@ -2,8 +2,9 @@
 name = "sleded"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+authors = ["JOLIMAITRE Matthieu <matthieu@imagevo.fr>"]
+description = "Minimalist API for storing data effortlessly persistently to a file."
+license = "MIT"
 
 [dependencies]
 serde = { version = "1.0.137", features = [ "derive" ] }
