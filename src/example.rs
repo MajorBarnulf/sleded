@@ -1,16 +1,15 @@
-use super::*;
-
 #[test]
 fn example() {
+    use super::*;
+    use serde::{Deserialize, Serialize};
+
     #[derive(Debug, Serialize, Deserialize)]
     pub struct Student {
         name: String,
         value: usize,
     }
     impl TableLayout for Student {
-        fn table_name() -> String {
-            "student".into()
-        }
+        const TABLE_NAME: &'static str = "student";
     }
 
     let db = open("./db").unwrap();
